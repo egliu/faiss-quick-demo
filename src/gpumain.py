@@ -12,16 +12,19 @@ def load_config():
 if __name__ == '__main__':
     config = load_config()
     IndexType = Enum('IndexType', ('Flat', 'IVFFlat', 'IVFPQ'))
+    begin_time = time.process_time()
     if config['index_type'] == IndexType.Flat.name:
         print(IndexType.Flat.name)
         import flatgpu
         index = flatgpu.FlatGpu(config)
     elif config['index_type'] == IndexType.IVFFlat.name:
         print(IndexType.IVFFlat.name)
+        import ivfflatgpu
+        index = ivfflatgpu.IVFFlatGpu(config)
     elif config['index_type'] == IndexType.IVFPQ.name:
         print(IndexType.IVFPQ.name)
     else:
         print("type ", config['index_type'], " is not supported, exit")
-    print("Start : %s" % time.ctime())
-    time.sleep(30)
+    print("duration : ", time.process_time()-begin_time)
+    time.sleep(10)
     print("End : %s" % time.ctime())

@@ -2,8 +2,8 @@ import faiss                     # make faiss available
 import numpy as np
 
 
-def FlatGpu(config):
-    print("FlatGpu, ", config)
+def IVFFlatGpu(config):
+    print("IVFFlatGpu, ", config)
     d = config['dimension']                     # dimension
     nb = config['db_size']                      # database size
     nq = config['query_num']                    # nb of queries
@@ -20,14 +20,20 @@ def FlatGpu(config):
     else:
         res.setTempMemory(config["temp_memory"])
 
-    # Using a flat index
+    # Using an IVF index
 
-    index_flat = faiss.IndexFlatL2(d)  # build a flat (CPU) index
+    nlist = config['nlist']
+    quantizer = faiss.IndexFlatL2(d)  # the other index
+    index_ivf = faiss.IndexIVFFlat(quantizer, d, nlist, faiss.METRIC_L2)
+    # here we specify METRIC_L2, by default it performs inner-product search
 
-    # make it a flat GPU index
-    gpu_index_flat = faiss.index_cpu_to_gpu(res, 0, index_flat)
+    # make it an IVF GPU index
+    gpu_index_ivf = faiss.index_cpu_to_gpu(res, 0, index_ivf)
 
-    gpu_index_flat.add(xb)         # add vectors to the index
-    print(gpu_index_flat.ntotal)
+    assert not gpu_index_ivf.is_trained
+    gpu_index_ivf.train(xb)        # add vectors to the index
+    assert gpu_index_ivf.is_trained
 
-    return gpu_index_flat
+    gpu_index_ivf.add(xb)          # add vectors to the index
+    print(gpu_index_ivf.ntotal)
+    return gpu_index_ivf
