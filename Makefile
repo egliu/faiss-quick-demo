@@ -16,11 +16,15 @@ image:
 		--tag $(DOCKER_IMAGE):$(FAISS_VERSION)-gpu .
 
 release:
-	# docker push $(DOCKER_IMAGE)
+	docker push $(DOCKER_IMAGE)
 	docker push $(DOCKER_IMAGE):$(FAISS_VERSION)-cpu
 	docker push $(DOCKER_IMAGE):$(FAISS_VERSION)-gpu
 
-baseImage=$(DOCKER_IMAGE):$(FAISS_VERSION)-gpu
+baseImage-cpu=$(DOCKER_IMAGE):$(FAISS_VERSION)-cpu
+baseImage-gpu=$(DOCKER_IMAGE):$(FAISS_VERSION)-gpu
 
-dev:
-	@baseImage=${baseImage} bash scripts/start-dev.sh
+dev-cpu:
+	@baseImage=${baseImage-cpu} bash scripts/start-dev-cpu.sh
+
+dev-gpu:
+	@baseImage=${baseImage-gpu} bash scripts/start-dev-gpu.sh

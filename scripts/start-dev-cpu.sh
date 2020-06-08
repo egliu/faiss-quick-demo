@@ -2,13 +2,13 @@
 
 set -euxo pipefail
 
-docker rm -f fqd || true
+docker rm -f fqd-cpu || true
 
-echo "start local dev env"
+echo "start local dev-cpu env"
 
-code_root=/home
+code_root=/home/faiss-quick-demo
 
-docker run -d --name=fqd \
+docker run -d --name=fqd-cpu \
   --network=host \
   -e TZ=Asia/Shanghai \
   -v ${PWD}:${code_root} \
@@ -18,4 +18,4 @@ docker run -d --name=fqd \
 docker exec \
   -e COLUMNS="$(tput cols)" \
   -e LINES="$(tput lines)" \
-  -it fqd bash
+  -it fqd-cpu bash
