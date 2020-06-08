@@ -1,0 +1,12 @@
+{
+  "index_type": "Flat",
+  "dimension": 256,
+  "nlist": 128,
+  "nprobe": 1024,
+  "sub_quantizers": 32,
+  "bits_per_code": 8,
+  "top_k": 64,
+  "db_size": 60000,
+  "db_num": 1,
+  "query_num": 50
+}
