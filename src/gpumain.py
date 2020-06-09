@@ -24,6 +24,8 @@ if __name__ == '__main__':
         index_list = ivfflatgpu.IVFFlatGpu(config)
     elif config['index_type'] == IndexType.IVFPQ.name:
         print(IndexType.IVFPQ.name)
+        import ivfpqgpu
+        index_list = ivfpqgpu.IVFPQGpu(config)
     else:
         print("type ", config['index_type'], " is not supported, exit")
     print("duration : ", time.process_time()-begin_time)
