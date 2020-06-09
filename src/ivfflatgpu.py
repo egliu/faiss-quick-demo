@@ -1,5 +1,6 @@
 import faiss                     # make faiss available
 import numpy as np
+import time
 
 
 def IVFFlatGpu(config):
@@ -20,20 +21,28 @@ def IVFFlatGpu(config):
     else:
         res.setTempMemory(config["temp_memory"])
 
-    # Using an IVF index
+    index_list = []
 
-    nlist = config['nlist']
-    quantizer = faiss.IndexFlatL2(d)  # the other index
-    index_ivf = faiss.IndexIVFFlat(quantizer, d, nlist, faiss.METRIC_L2)
-    # here we specify METRIC_L2, by default it performs inner-product search
+    for i in range(config['db_num']):
+        print(i)
+        begin_time = time.process_time()
 
-    # make it an IVF GPU index
-    gpu_index_ivf = faiss.index_cpu_to_gpu(res, 0, index_ivf)
+        # Using an IVF index
 
-    assert not gpu_index_ivf.is_trained
-    gpu_index_ivf.train(xb)        # add vectors to the index
-    assert gpu_index_ivf.is_trained
+        nlist = config['nlist']
+        quantizer = faiss.IndexFlatL2(d)  # the other index
+        index_ivf = faiss.IndexIVFFlat(quantizer, d, nlist, faiss.METRIC_L2)
+        # here we specify METRIC_L2, by default it performs inner-product search
 
-    gpu_index_ivf.add(xb)          # add vectors to the index
-    print(gpu_index_ivf.ntotal)
-    return gpu_index_ivf
+        # make it an IVF GPU index
+        gpu_index_ivf = faiss.index_cpu_to_gpu(res, 0, index_ivf)
+
+        assert not gpu_index_ivf.is_trained
+        gpu_index_ivf.train(xb)        # add vectors to the index
+        assert gpu_index_ivf.is_trained
+
+        gpu_index_ivf.add(xb)          # add vectors to the index
+        print(gpu_index_ivf.ntotal)
+        index_list.append(gpu_index_ivf)
+        print("one time duration: ", time.process_time()-begin_time)
+    return index_list

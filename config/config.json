@@ -1,5 +1,5 @@
 {
-  "index_type": "Flat",
+  "index_type": "IVFFlat",
   "dimension": 256,
   "nlist": 1024,
   "nprobe": 128,

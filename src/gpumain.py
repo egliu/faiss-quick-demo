@@ -21,7 +21,7 @@ if __name__ == '__main__':
     elif config['index_type'] == IndexType.IVFFlat.name:
         print(IndexType.IVFFlat.name)
         import ivfflatgpu
-        ivfflatgpu.IVFFlatGpu(config)
+        index_list = ivfflatgpu.IVFFlatGpu(config)
     elif config['index_type'] == IndexType.IVFPQ.name:
         print(IndexType.IVFPQ.name)
     else:
