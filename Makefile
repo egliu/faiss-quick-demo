@@ -28,3 +28,9 @@ dev-cpu:
 
 dev-gpu:
 	@baseImage=${baseImage-gpu} bash scripts/start-dev-gpu.sh
+
+test-image-gpu:
+	docker build \
+		--build-arg IMAGE=egliu/faiss-docker:1.6.3-gpu \
+		--tag $(DOCKER_IMAGE):$(FAISS_VERSION)-gpu-test \
+		-f ./test-dockerfile/gpu/Dockerfile .

@@ -29,5 +29,5 @@ if __name__ == '__main__':
     else:
         print("type ", config['index_type'], " is not supported, exit")
     print("duration : ", time.time()-begin_time, " s")
-    time.sleep(20)
+    time.sleep(2000)
     print("End : %s" % time.ctime())
