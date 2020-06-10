@@ -1,13 +1,13 @@
 {
-  "index_type": "IVFFlat",
+  "index_type": "IVFPQ",
   "dimension": 256,
-  "nlist": 1024,
-  "nprobe": 128,
+  "nlist": 1,
+  "nprobe": 1,
   "sub_quantizers": 32,
   "bits_per_code": 8,
-  "top_k": 64,
   "db_size": 60000,
   "db_num": 10,
   "query_num": 50,
-  "temp_memory": 0
+  "temp_memory": 128,
+  "top_k": 256
 }

@@ -8,7 +8,12 @@ def IVFPQGpu(config):
     d = config['dimension']                     # dimension
     nb = config['db_size']                      # database size
     nq = config['query_num']                    # nb of queries
-    np.random.seed(1234)                        # make reproducible
+    # np.random.seed(1234)                        # make reproducible
+    # xb = np.random.random((nb, d)).astype('float32')
+    # xb[:, 0] += np.arange(nb) / 1000.
+    # xq = np.random.random((nq, d)).astype('float32')
+    # xq[:, 0] += np.arange(nq) / 1000.
+    k = config['top_k']
 
     res = faiss.StandardGpuResources()  # use a single GPU
 
@@ -16,11 +21,10 @@ def IVFPQGpu(config):
     ave_duration = 0
 
     for i in range(config['db_num']):
+        # Using an IVFPQ index
+        np.random.seed(i)
         xb = np.random.random((nb, d)).astype('float32')
         xb[:, 0] += np.arange(nb) / 1000.
-
-        # Using an IVFPQ index
-
         nlist = config['nlist']
         m = config['sub_quantizers']
         code = config['bits_per_code']
@@ -37,20 +41,24 @@ def IVFPQGpu(config):
         assert gpu_index_ivfpq.is_trained
 
         gpu_index_ivfpq.add(xb)          # add vectors to the index
+        duration = time.time()-begin_time
+        # print(i, ", duration = ", duration, " s")
+        ave_duration += duration
         index_list.append(gpu_index_ivfpq)
-        ave_duration += (time.time()-begin_time)
 
     print("begin search, index_list len = ", len(index_list))
     print("construct index aver time = ", ave_duration/len(index_list), " s")
     ave_duration = 0
 
     for i in range(config['db_num']):
+        np.random.seed(i+config['db_num'])
         xq = np.random.random((nq, d)).astype('float32')
         xq[:, 0] += np.arange(nq) / 1000.
-        k = config['top_k']
         begin_time = time.time()
         index_list[i].search(xq, k)  # actual search
-        ave_duration += (time.time()-begin_time)
+        duration = time.time()-begin_time
+        # print(i, ", duration = ", duration, " s")
+        ave_duration += duration
 
     print("search index aver time = ", ave_duration/len(index_list), " s")
     return index_list

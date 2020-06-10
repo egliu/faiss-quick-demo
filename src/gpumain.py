@@ -13,7 +13,7 @@ if __name__ == '__main__':
     config = load_config()
     IndexType = Enum('IndexType', ('Flat', 'IVFFlat', 'IVFPQ'))
     index_list = []
-    begin_time = time.process_time()
+    begin_time = time.time()
     if config['index_type'] == IndexType.Flat.name:
         print(IndexType.Flat.name)
         import flatgpu
@@ -28,6 +28,6 @@ if __name__ == '__main__':
         index_list = ivfpqgpu.IVFPQGpu(config)
     else:
         print("type ", config['index_type'], " is not supported, exit")
-    print("duration : ", time.process_time()-begin_time)
+    print("duration : ", time.time()-begin_time, " s")
     time.sleep(10)
     print("End : %s" % time.ctime())
