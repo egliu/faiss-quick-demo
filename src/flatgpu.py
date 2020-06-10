@@ -16,17 +16,17 @@ def FlatGpu(config):
 
     res = faiss.StandardGpuResources()  # use a single GPU
     # temp memory
-    if config["temp_memory"] == 0:
-        res.noTempMemory()
-    else:
-        res.setTempMemory(config["temp_memory"])
+    # if config["temp_memory"] == 0:
+    #     res.noTempMemory()
+    # else:
+    #     res.setTempMemory(config["temp_memory"])
 
     index_list = []
 
     # Using a flat index
     for i in range(config['db_num']):
         print(i)
-        begin_time = time.process_time()
+        begin_time = time.time()
 
         index_flat = faiss.IndexFlatL2(d)  # build a flat (CPU) index
 
@@ -36,6 +36,9 @@ def FlatGpu(config):
         gpu_index_flat.add(xb)         # add vectors to the index
         index_list.append(gpu_index_flat)
         print(gpu_index_flat.ntotal)
-        print("one time duration: ", time.process_time()-begin_time)
+        print("one time duration: ", time.time()-begin_time)
+        D, I = gpu_index_flat.search(xb[:5], 4)
+        print(I)
+        print(D)
 
     return index_list

@@ -4,6 +4,9 @@ import time
 
 
 def IVFPQGpu(config):
+    if config['multi_cpu'] == True:
+        import ivfpqmultigpu
+        return ivfpqmultigpu.IVFPQMultiGpu(config)
     print("IVFPQGpu, ", config)
     d = config['dimension']                     # dimension
     nb = config['db_size']                      # database size
@@ -42,7 +45,10 @@ def IVFPQGpu(config):
 
         gpu_index_ivfpq.add(xb)          # add vectors to the index
         duration = time.time()-begin_time
-        # print(i, ", duration = ", duration, " s")
+        print(i, ", duration = ", duration, " s")
+        D, I = gpu_index_ivfpq.search(xb[:5], 4)
+        print(I)
+        print(D)
         ave_duration += duration
         index_list.append(gpu_index_ivfpq)
 
@@ -55,9 +61,11 @@ def IVFPQGpu(config):
         xq = np.random.random((nq, d)).astype('float32')
         xq[:, 0] += np.arange(nq) / 1000.
         begin_time = time.time()
-        index_list[i].search(xq, k)  # actual search
+        D, I = index_list[i].search(xq, k)  # actual search
         duration = time.time()-begin_time
-        # print(i, ", duration = ", duration, " s")
+        print(i, ", duration = ", duration, " s")
+        # print(I[:5])                   # neighbors of the 5 first queries
+        # print(I[-5:])                  # neighbors of the 5 last queries
         ave_duration += duration
 
     print("search index aver time = ", ave_duration/len(index_list), " s")
