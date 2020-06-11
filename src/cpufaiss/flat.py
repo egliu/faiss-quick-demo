@@ -13,6 +13,32 @@ def FlatCpu(config):
 
     index_list = []
     create_ave_duration = 0
+    search_ave_duration = 0
+
+    if config['test_batch_write'] == True:
+        batch_write_ave_duration = 0
+        batch_write_num = config['write_batch_num']
+        batch_write_time = int(nb/config['write_batch_num'])
+        print("batch_write_time = ", batch_write_num)
+        for i in range(config['db_num']):
+            index_flat = faiss.IndexFlatL2(d)  # build a flat (CPU) index
+            batch_write_ave_one_lib = 0
+            for j in range(batch_write_time):
+                np.random.seed(i*batch_write_time+j)
+                xb = np.random.random((batch_write_num, d)).astype('float32')
+                xb[:, 0] += np.arange(batch_write_num) / 1000.
+                begin_time = time.time()
+                index_flat.add(xb)
+                duration = time.time()-begin_time
+                batch_write_ave_one_lib += duration
+                batch_write_ave_duration += duration
+            print("batch_write_ave_one_lib = ",
+                  (batch_write_ave_one_lib/batch_write_time)*1000*1000, " us")
+            index_list.append(index_flat)
+        print("batch_write_ave_duration = ", (batch_write_ave_duration /
+                                              len(index_list)/batch_write_time)*1000*1000, " us")
+
+        return index_list
 
     # Using a flat index
     for i in range(config['db_num']):
@@ -23,15 +49,12 @@ def FlatCpu(config):
 
         index_flat = faiss.IndexFlatL2(d)  # build a flat (CPU) index
 
-        # print(index_flat.is_trained)
         index_flat.add(xb)                  # add vectors to the index
-        # print(index_flat.ntotal)
         duration = time.time()-begin_time
         create_ave_duration += duration
-        # print(i, ":duration=", duration, " s")
         index_list.append(index_flat)
     print("craete ave duration = ", create_ave_duration/len(index_list), " s")
-    ave_duration = 0
+
     if len(index_list) == 0:
         return index_list
     for i in range(len(index_list)):
@@ -42,10 +65,9 @@ def FlatCpu(config):
             begin_time = time.time()
             index_list[i].search(xq, topk)  # actual search
             duration = time.time()-begin_time
-            # print(i, ", search duration = ", duration, " s")
-            ave_duration += duration
+            search_ave_duration += duration
 
-    print("search index aver time = ", ave_duration /
+    print("search index aver time = ", search_ave_duration /
           len(index_list)/search_repeat, " s")
 
     return index_list

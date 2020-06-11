@@ -1,5 +1,5 @@
 {
-  "index_type": "IVFFlat",
+  "index_type": "Flat",
   "dimension": 256,
   "nlist": 1024,
   "nprobe": 128,
@@ -8,5 +8,7 @@
   "db_size": 60000,
   "db_num": 50,
   "query_num": 5,
+  "write_batch_num": 30,
+  "test_batch_write": true,
   "top_k": 256
 }
