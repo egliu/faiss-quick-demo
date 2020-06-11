@@ -17,6 +17,36 @@ def PQCpu(config):
     create_ave_duration = 0
     search_ave_duration = 0
 
+    if config['test_batch_write'] == True:
+        batch_write_ave_duration = 0
+        batch_write_num = config['write_batch_num']
+        batch_write_time = int(nb/config['write_batch_num'])
+        print("batch_write_time = ", batch_write_num)
+        for i in range(config['db_num']):
+            index_pq = faiss.IndexPQ(d, m, nbits)
+            batch_write_ave_one_lib = 0
+            np.random.seed(66666)
+            xb = np.random.random((10000, d)).astype('float32')
+            xb[:, 0] += np.arange(10000) / 1000.
+            if index_pq.is_trained == False:
+                index_pq.train(xb)
+            for j in range(batch_write_time):
+                np.random.seed(i*batch_write_time+j)
+                xb = np.random.random((batch_write_num, d)).astype('float32')
+                xb[:, 0] += np.arange(batch_write_num) / 1000.
+                begin_time = time.time()
+                index_pq.add(xb)
+                duration = time.time()-begin_time
+                batch_write_ave_one_lib += duration
+                batch_write_ave_duration += duration
+            print("batch_write_ave_one_lib = ",
+                  (batch_write_ave_one_lib/batch_write_time)*1000*1000, " us")
+            index_list.append(index_pq)
+        print("batch_write_ave_duration = ", (batch_write_ave_duration /
+                                              len(index_list)/batch_write_time)*1000*1000, " us")
+
+        return index_list
+
     for i in range(config['db_num']):
         np.random.seed(i)                        # make reproducible
         xb = np.random.random((nb, d)).astype('float32')
