@@ -1,8 +1,8 @@
 {
-  "index_type": "Flat",
+  "index_type": "IVFFlat",
   "dimension": 256,
-  "nlist": 1,
-  "nprobe": 1,
+  "nlist": 1024,
+  "nprobe": 128,
   "sub_quantizers": 32,
   "bits_per_code": 8,
   "db_size": 60000,

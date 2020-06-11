@@ -20,8 +20,8 @@ if __name__ == '__main__':
         index_list = cpufaiss.flat.FlatCpu(config)
     elif config['index_type'] == IndexType.IVFFlat.name:
         print(IndexType.IVFFlat.name)
-        import ivfflatgpu
-        index_list = ivfflatgpu.IVFFlatGpu(config)
+        import cpufaiss.ivfflat
+        index_list = cpufaiss.ivfflat.IVFFlatCpu(config)
     elif config['index_type'] == IndexType.IVFPQ.name:
         print(IndexType.IVFPQ.name)
         import ivfpqgpu
