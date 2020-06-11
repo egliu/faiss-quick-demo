@@ -31,6 +31,39 @@ def IVFPQGpu(config):
     create_ave_duration = 0
     search_ave_duration = 0
 
+    if config['test_batch_write'] == True:
+        batch_write_ave_duration = 0
+        batch_write_num = config['write_batch_num']
+        batch_write_time = int(nb/config['write_batch_num'])
+        print("batch_write_time = ", batch_write_num)
+        for i in range(config['db_num']):
+            quantizer = faiss.IndexFlatL2(d)  # the other index
+            index_ivfpq = faiss.IndexIVFPQ(quantizer, d, nlist, m, nbits)
+            gpu_index_ivfpq = faiss.index_cpu_to_gpu(res, 0, index_ivfpq)
+            batch_write_ave_one_lib = 0
+            np.random.seed(66666)
+            xb = np.random.random((10000, d)).astype('float32')
+            xb[:, 0] += np.arange(10000) / 1000.
+            if gpu_index_ivfpq.is_trained == False:
+                gpu_index_ivfpq.train(xb)
+            gpu_index_ivfpq.nprobe = nprobe
+            for j in range(batch_write_time):
+                np.random.seed(i*batch_write_time+j)
+                xb = np.random.random((batch_write_num, d)).astype('float32')
+                xb[:, 0] += np.arange(batch_write_num) / 1000.
+                begin_time = time.time()
+                gpu_index_ivfpq.add(xb)
+                duration = time.time()-begin_time
+                batch_write_ave_one_lib += duration
+                batch_write_ave_duration += duration
+            print("batch_write_ave_one_lib = ",
+                  (batch_write_ave_one_lib/batch_write_time)*1000*1000, " us")
+            index_list.append(gpu_index_ivfpq)
+        print("batch_write_ave_duration = ", (batch_write_ave_duration /
+                                              len(index_list)/batch_write_time)*1000*1000, " us")
+
+        return index_list
+
     for i in range(config['db_num']):
         np.random.seed(i)
         xb = np.random.random((nb, d)).astype('float32')

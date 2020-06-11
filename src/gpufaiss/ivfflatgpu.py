@@ -48,7 +48,7 @@ def IVFFlatGpu(config):
                 duration = time.time()-begin_time
                 batch_write_ave_one_lib += duration
                 batch_write_ave_duration += duration
-            print("batch_write_ave_one_lib = ",
+            print(i, ",batch_write_ave_one_lib = ",
                   (batch_write_ave_one_lib/batch_write_time)*1000*1000, " us")
             index_list.append(index_ivf)
         print("batch_write_ave_duration = ", (batch_write_ave_duration /
