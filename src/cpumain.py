@@ -11,7 +11,7 @@ def load_config():
 
 if __name__ == '__main__':
     config = load_config()
-    IndexType = Enum('IndexType', ('Flat', 'IVFFlat', 'IVFPQ'))
+    IndexType = Enum('IndexType', ('Flat', 'IVFFlat', 'PQ', 'IVFPQ'))
     index_list = []
     begin_time = time.time()
     if config['index_type'] == IndexType.Flat.name:
@@ -22,10 +22,14 @@ if __name__ == '__main__':
         print(IndexType.IVFFlat.name)
         import cpufaiss.ivfflat
         index_list = cpufaiss.ivfflat.IVFFlatCpu(config)
+    elif config['index_type'] == IndexType.PQ.name:
+        print(IndexType.PQ.name)
+        import cpufaiss.pq
+        index_list = cpufaiss.pq.PQCpu(config)
     elif config['index_type'] == IndexType.IVFPQ.name:
         print(IndexType.IVFPQ.name)
-        import ivfpqgpu
-        index_list = ivfpqgpu.IVFPQGpu(config)
+        import cpufaiss.ivfpq
+        index_list = cpufaiss.ivfpq.IVFPQCpu(config)
     else:
         print("type ", config['index_type'], " is not supported, exit")
     print("duration : ", time.time()-begin_time, " s")
