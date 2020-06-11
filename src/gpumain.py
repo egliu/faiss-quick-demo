@@ -16,16 +16,16 @@ if __name__ == '__main__':
     begin_time = time.time()
     if config['index_type'] == IndexType.Flat.name:
         print(IndexType.Flat.name)
-        import flatgpu
-        index_list = flatgpu.FlatGpu(config)
+        import gpufaiss.flatgpu
+        index_list = gpufaiss.flatgpu.FlatGpu(config)
     elif config['index_type'] == IndexType.IVFFlat.name:
         print(IndexType.IVFFlat.name)
-        import ivfflatgpu
-        index_list = ivfflatgpu.IVFFlatGpu(config)
+        import gpufaiss.ivfflatgpu
+        index_list = gpufaiss.ivfflatgpu.IVFFlatGpu(config)
     elif config['index_type'] == IndexType.IVFPQ.name:
         print(IndexType.IVFPQ.name)
-        import ivfpqgpu
-        index_list = ivfpqgpu.IVFPQGpu(config)
+        import gpufaiss.ivfpqgpu
+        index_list = gpufaiss.ivfpqgpu.IVFPQGpu(config)
     else:
         print("type ", config['index_type'], " is not supported, exit")
     print("duration : ", time.time()-begin_time, " s")

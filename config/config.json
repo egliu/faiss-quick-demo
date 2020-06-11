@@ -1,5 +1,5 @@
 {
-  "index_type": "IVFPQ",
+  "index_type": "Flat",
   "multi_gpu": false,
   "gpus": 1,
   "dimension": 256,
@@ -8,8 +8,10 @@
   "sub_quantizers": 32,
   "bits_per_code": 8,
   "db_size": 60000,
-  "db_num": 20,
-  "query_num": 50,
+  "db_num": 50,
+  "query_num": 5,
   "temp_memory": -1,
+  "write_batch_num": 30,
+  "test_batch_write": true,
   "top_k": 256
 }
