@@ -19,7 +19,7 @@ def FlatGpu(config):
     if config["temp_memory"] == 0:
         res.noTempMemory()
     elif config["temp_memory"] != -1:
-        res.setTempMemory(config["temp_memory"])
+        res.setTempMemory(config["temp_memory"]*1024*1024)
 
     index_list = []
     create_ave_duration = 0

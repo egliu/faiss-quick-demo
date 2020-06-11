@@ -11,10 +11,12 @@ def IVFPQGpu(config):
     d = config['dimension']                     # dimension
     nb = config['db_size']                      # database size
     nq = config['query_num']                    # nb of queries
-    k = config['top_k']
-    nlist = config['nlist']
+    topk = config['top_k']
     m = config['sub_quantizers']
-    code = config['bits_per_code']
+    nbits = config['bits_per_code']
+    search_repeat = 10
+    nlist = config['nlist']
+    nprobe = config['nprobe']
 
     res = faiss.StandardGpuResources()  # use a single GPU
     # temp memory
@@ -26,26 +28,16 @@ def IVFPQGpu(config):
         res.setTempMemory(config["temp_memory"]*1024*1024)
 
     index_list = []
-    ave_duration = 0
-    data_prepare_duration = 0
-    data_train_add_duration = 0
+    create_ave_duration = 0
+    search_ave_duration = 0
 
     for i in range(config['db_num']):
-        # Using an IVFPQ index
-        begin_time = time.time()
         np.random.seed(i)
         xb = np.random.random((nb, d)).astype('float32')
         xb[:, 0] += np.arange(nb) / 1000.
-        duration = time.time()-begin_time
-        print(i, ", data prepare duration is ", duration)
-        if i > 0:
-            data_prepare_duration += duration
         begin_time = time.time()
         quantizer = faiss.IndexFlatL2(d)  # the other index
-        index_ivfpq = faiss.IndexIVFPQ(quantizer, d, nlist, m, code)
-        # here we specify METRIC_L2, by default it performs inner-product search
-
-        # make it an IVFPQ GPU index
+        index_ivfpq = faiss.IndexIVFPQ(quantizer, d, nlist, m, nbits)
         gpu_index_ivfpq = faiss.index_cpu_to_gpu(res, 0, index_ivfpq)
 
         assert not gpu_index_ivfpq.is_trained
@@ -53,36 +45,26 @@ def IVFPQGpu(config):
         assert gpu_index_ivfpq.is_trained
 
         gpu_index_ivfpq.add(xb)          # add vectors to the index
+        gpu_index_ivfpq.nprobe = nprobe
         duration = time.time()-begin_time
-        print(i, ", data train add duration is ", duration)
-        if i > 0:
-            data_train_add_duration += duration
-        print(i, ",size = ", gpu_index_ivfpq.ntotal)
-        # duration = time.time()-begin_time
-        # print(i, ", duration = ", duration, " s")
-        # D, I = gpu_index_ivfpq.search(xb[:5], 4)
-        # print(I)
-        # print(D)
-        # ave_duration += duration
+        create_ave_duration += duration
         index_list.append(gpu_index_ivfpq)
-    print("data_prepare_duration = ", data_prepare_duration,
-          ",data_train_add_duration = ", data_train_add_duration)
+        if i == 0:
+            gpu_index_ivfpq.search(xb[:5], 4)
+    print("craete ave duration = ", create_ave_duration/len(index_list), " s")
 
-    # print("begin search, index_list len = ", len(index_list))
-    # print("construct index aver time = ", ave_duration/len(index_list), " s")
-    # ave_duration = 0
+    if len(index_list) == 0:
+        return index_list
+    for i in range(len(index_list)):
+        for j in range(search_repeat):
+            np.random.seed(i*search_repeat+j+config['db_num'])
+            xq = np.random.random((nq, d)).astype('float32')
+            xq[:, 0] += np.arange(nq) / 1000.
+            begin_time = time.time()
+            index_list[i].search(xq, topk)  # actual search
+            duration = time.time()-begin_time
+            search_ave_duration += duration
 
-    # for i in range(config['db_num']):
-    #     np.random.seed(i+config['db_num'])
-    #     xq = np.random.random((nq, d)).astype('float32')
-    #     xq[:, 0] += np.arange(nq) / 1000.
-    #     begin_time = time.time()
-    #     D, I = index_list[i].search(xq, k)  # actual search
-    #     duration = time.time()-begin_time
-    #     print(i, ", duration = ", duration, " s")
-    #     # print(I[:5])                   # neighbors of the 5 first queries
-    #     # print(I[-5:])                  # neighbors of the 5 last queries
-    #     ave_duration += duration
-
-    # print("search index aver time = ", ave_duration/len(index_list), " s")
+    print("search index aver time = ", search_ave_duration /
+          len(index_list)/search_repeat, " s")
     return index_list
