@@ -1,15 +1,12 @@
 {
-  "index_type": "IVFPQ",
-  "multi_gpu": false,
-  "gpus": 1,
+  "index_type": "Flat",
   "dimension": 256,
   "nlist": 1,
   "nprobe": 1,
   "sub_quantizers": 32,
   "bits_per_code": 8,
   "db_size": 60000,
-  "db_num": 20,
-  "query_num": 50,
-  "temp_memory": -1,
+  "db_num": 50,
+  "query_num": 5,
   "top_k": 256
 }

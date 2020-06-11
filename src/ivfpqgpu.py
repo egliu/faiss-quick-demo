@@ -4,7 +4,7 @@ import time
 
 
 def IVFPQGpu(config):
-    if config['multi_cpu'] == True:
+    if config['multi_gpu'] == True:
         import ivfpqmultigpu
         return ivfpqmultigpu.IVFPQMultiGpu(config)
     print("IVFPQGpu, ", config)
@@ -12,21 +12,35 @@ def IVFPQGpu(config):
     nb = config['db_size']                      # database size
     nq = config['query_num']                    # nb of queries
     k = config['top_k']
+    nlist = config['nlist']
+    m = config['sub_quantizers']
+    code = config['bits_per_code']
 
     res = faiss.StandardGpuResources()  # use a single GPU
+    # temp memory
+    if config["temp_memory"] == 0:
+        print("set noTempMemory")
+        res.noTempMemory()
+    elif config["temp_memory"] != -1:
+        print("set temp_memory to ", config["temp_memory"])
+        res.setTempMemory(config["temp_memory"]*1024*1024)
 
     index_list = []
     ave_duration = 0
+    data_prepare_duration = 0
+    data_train_add_duration = 0
 
     for i in range(config['db_num']):
         # Using an IVFPQ index
+        begin_time = time.time()
         np.random.seed(i)
         xb = np.random.random((nb, d)).astype('float32')
         xb[:, 0] += np.arange(nb) / 1000.
-        nlist = config['nlist']
-        m = config['sub_quantizers']
-        code = config['bits_per_code']
-        # begin_time = time.time()
+        duration = time.time()-begin_time
+        print(i, ", data prepare duration is ", duration)
+        if i > 0:
+            data_prepare_duration += duration
+        begin_time = time.time()
         quantizer = faiss.IndexFlatL2(d)  # the other index
         index_ivfpq = faiss.IndexIVFPQ(quantizer, d, nlist, m, code)
         # here we specify METRIC_L2, by default it performs inner-product search
@@ -39,6 +53,10 @@ def IVFPQGpu(config):
         assert gpu_index_ivfpq.is_trained
 
         gpu_index_ivfpq.add(xb)          # add vectors to the index
+        duration = time.time()-begin_time
+        print(i, ", data train add duration is ", duration)
+        if i > 0:
+            data_train_add_duration += duration
         print(i, ",size = ", gpu_index_ivfpq.ntotal)
         # duration = time.time()-begin_time
         # print(i, ", duration = ", duration, " s")
@@ -47,6 +65,8 @@ def IVFPQGpu(config):
         # print(D)
         # ave_duration += duration
         index_list.append(gpu_index_ivfpq)
+    print("data_prepare_duration = ", data_prepare_duration,
+          ",data_train_add_duration = ", data_train_add_duration)
 
     # print("begin search, index_list len = ", len(index_list))
     # print("construct index aver time = ", ave_duration/len(index_list), " s")
