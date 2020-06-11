@@ -24,6 +24,38 @@ def IVFFlatGpu(config):
     create_ave_duration = 0
     search_ave_duration = 0
 
+    if config['test_batch_write'] == True:
+        batch_write_ave_duration = 0
+        batch_write_num = config['write_batch_num']
+        batch_write_time = int(nb/config['write_batch_num'])
+        print("batch_write_time = ", batch_write_num)
+        for i in range(config['db_num']):
+            # Using an IVF index
+            quantizer = faiss.IndexFlatL2(d)  # the other index
+            index_ivf = faiss.IndexIVFFlat(
+                quantizer, d, nlist, faiss.METRIC_L2)
+            gpu_index_ivf = faiss.index_cpu_to_gpu(res, 0, index_ivf)
+            batch_write_ave_one_lib = 0
+            for j in range(batch_write_time):
+                np.random.seed(i*batch_write_time+j)
+                xb = np.random.random((batch_write_num, d)).astype('float32')
+                xb[:, 0] += np.arange(batch_write_num) / 1000.
+                begin_time = time.time()
+                if gpu_index_ivf.is_trained == False:
+                    print("train, j=", j)
+                    gpu_index_ivf.train(xb)
+                gpu_index_ivf.add(xb)
+                duration = time.time()-begin_time
+                batch_write_ave_one_lib += duration
+                batch_write_ave_duration += duration
+            print("batch_write_ave_one_lib = ",
+                  (batch_write_ave_one_lib/batch_write_time)*1000*1000, " us")
+            index_list.append(index_ivf)
+        print("batch_write_ave_duration = ", (batch_write_ave_duration /
+                                              len(index_list)/batch_write_time)*1000*1000, " us")
+
+        return index_list
+
     for i in range(config['db_num']):
         np.random.seed(i)                        # make reproducible
         xb = np.random.random((nb, d)).astype('float32')
